@@ -1,0 +1,14 @@
+print("=== TESTES ===")
+!pytest -q
+
+print("\n=== COBERTURA ===")
+!pytest --cov=legacy_checkout --cov-report=term
+
+print("\n=== COMPLEXIDADE ===")
+!radon cc legacy_checkout.py -s -a
+
+print("\n=== MANUTENIBILIDADE ===")
+!radon mi legacy_checkout.py -s
+
+print("\n=== QUALIDADE ===")
+!ruff check legacy_checkout.py --statistics
