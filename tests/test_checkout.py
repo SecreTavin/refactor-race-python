@@ -29,6 +29,46 @@ def test_regular_customer():
     assert result["shipping"] == 0
     assert result["tax"] == 66.50
     assert result["total"] == 1016.50
+    
+
+def test_multiple_items():
+    customer = {
+        "name": "Pedro",
+        "type": "regular"
+    }
+
+    items = [
+        {
+            "name": "Notebook",
+            "price": 1000.00,
+            "qty": 1,
+            "weight": 2
+        },
+        {
+            "name": "Mouse",
+            "price": 50.00,
+            "qty": 2,
+            "weight": 0.1
+        },
+        {
+            "name": "Teclado",
+            "price": 200.00,
+            "qty": 1,
+            "weight": 1
+        }
+    ]
+
+    result = process_order(
+        customer,
+        items,
+        state="MG"
+    )
+
+    assert result["subtotal"] == 1300.00
+    assert result["discount"] == 65.00
+    assert result["shipping"] == 0
+    assert result["tax"] == 86.45
+    assert result["total"] == 1321.45
 
 
 def test_vip_customer():
