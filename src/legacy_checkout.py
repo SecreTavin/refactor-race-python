@@ -5,13 +5,7 @@ ORDERS_PROCESSED = []
 
 def process_order(customer, items, coupon="", state="MG", express=False):
 
-    # cálculo do subtotal
-    total1 = 0
-    for x in items:
-        if x["qty"] > 0:
-            total1 = total1 + (x["price"] * x["qty"])
-
-    # alguém colocou outro cálculo porque não confiava no primeiro
+    #calculo do subtotal
     subtotal = 0
     for x in items:
         if x["qty"] > 0:
@@ -92,15 +86,13 @@ def process_order(customer, items, coupon="", state="MG", express=False):
     else:
         pontos = int((valor_com_desconto + frete + imposto) / 10)
 
-    # procura produtos repetidos de forma bem pouco elegante
+    # procura produtos repetidos de forma bem pouco elegante (refatorado!)
     duplicados = []
 
     for i in range(len(items)):
-        for j in range(len(items)):
-            if i != j:
-                if items[i]["name"] == items[j]["name"]:
-                    if items[i]["name"] not in duplicados:
-                        duplicados.append(items[i]["name"])
+        for j in range(i + 1, len(items)):
+            if items[i]["name"] == items[j]["name"]:
+                duplicados.append(items[i]["name"])
 
     total_final = round(valor_com_desconto + frete + imposto, 2)
 
