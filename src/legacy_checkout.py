@@ -4,6 +4,51 @@ from collections import Counter
 
 ORDERS_PROCESSED = []
 
+# Tipos de cliente
+VIP = "vip"
+EMPLOYEE = "employee"
+REGULAR = "regular"
+
+# Desconto por tipo de cliente
+VIP_DISCOUNT_RATE = 0.10
+VIP_HIGH_VALUE_DISCOUNT_RATE = 0.15
+VIP_HIGH_VALUE_THRESHOLD = 1000
+EMPLOYEE_DISCOUNT_RATE = 0.20
+REGULAR_DISCOUNT_RATE = 0.05
+REGULAR_DISCOUNT_THRESHOLD = 800
+MAX_DISCOUNT_RATE = 0.25
+
+# Cupons
+COUPON_PROMO10 = "PROMO10"
+COUPON_PROMO20 = "PROMO20"
+COUPON_VIP50 = "VIP50"
+PROMO10_RATE = 0.10
+PROMO20_RATE = 0.20
+PROMO20_MIN_SUBTOTAL = 500
+VIP50_AMOUNT = 50
+
+# Frete
+FREE_SHIPPING_THRESHOLD = 500
+SOUTHEAST_STATES = frozenset({"MG", "SP", "RJ", "ES"})
+SOUTHEAST_BASE_SHIPPING = 20
+SOUTHEAST_SHIPPING_PER_KG = 0.4
+OTHER_REGIONS_BASE_SHIPPING = 35
+OTHER_REGIONS_SHIPPING_PER_KG = 0.6
+EXPRESS_SHIPPING_MULTIPLIER = 1.8
+
+# Impostos
+TAX_RATES = {
+    "MG": 0.07,
+    "SP": 0.09,
+    "RJ": 0.08,
+    "ES": 0.07,
+}
+DEFAULT_TAX_RATE = 0.12
+
+# Pontos de fidelidade: valor gasto necessário para ganhar 1 ponto
+VIP_SPENT_PER_POINT = 5
+DEFAULT_SPENT_PER_POINT = 10
+
 
 def process_order(customer, items, coupon="", state="MG", express=False):
 
@@ -61,23 +106,9 @@ def process_order(customer, items, coupon="", state="MG", express=False):
 
 # Calcula o imposto com base no estado e no valor com desconto
 def tax_calculation(state, valor_com_desconto):
-    taxa = 0
-    
-    match state:
-        case "MG":
-            taxa = 0.07
-        case "SP":
-            taxa = 0.09
-        case "RJ":
-            taxa = 0.08
-        case "ES":
-            taxa = 0.07
-        case _:
-            taxa = 0.12
+    taxa = TAX_RATES.get(state, DEFAULT_TAX_RATE)
 
-    imposto = valor_com_desconto * taxa
-    
-    return imposto
+    return valor_com_desconto * taxa
 
 # Calcula o subtotal dos items do pedido
 def subtotal_calculation(items):
@@ -94,32 +125,32 @@ def discount_calculation(customer, subtotal, coupon):
     desconto = 0
 
     # desconto por tipo de cliente
-    if customer["type"] == "vip":
-        if subtotal >= 1000:
-            desconto = subtotal * 0.15
+    if customer["type"] == VIP:
+        if subtotal >= VIP_HIGH_VALUE_THRESHOLD:
+            desconto = subtotal * VIP_HIGH_VALUE_DISCOUNT_RATE
         else:
-            desconto = subtotal * 0.10
+            desconto = subtotal * VIP_DISCOUNT_RATE
     else:
-        if customer["type"] == "employee":
-            desconto = subtotal * 0.20
+        if customer["type"] == EMPLOYEE:
+            desconto = subtotal * EMPLOYEE_DISCOUNT_RATE
         else:
-            if customer["type"] == "regular":
-                if subtotal >= 800:
-                    desconto = subtotal * 0.05
+            if customer["type"] == REGULAR:
+                if subtotal >= REGULAR_DISCOUNT_THRESHOLD:
+                    desconto = subtotal * REGULAR_DISCOUNT_RATE
 
     # cupons
-    if coupon == "PROMO10":
-        desconto = desconto + subtotal * 0.10
+    if coupon == COUPON_PROMO10:
+        desconto = desconto + subtotal * PROMO10_RATE
 
-    if coupon == "PROMO20" and subtotal >= 500:
-        desconto = desconto + subtotal * 0.20
+    if coupon == COUPON_PROMO20 and subtotal >= PROMO20_MIN_SUBTOTAL:
+        desconto = desconto + subtotal * PROMO20_RATE
 
-    if coupon == "VIP50" and customer["type"] == "vip":
-        desconto = desconto + 50
+    if coupon == COUPON_VIP50 and customer["type"] == VIP:
+        desconto = desconto + VIP50_AMOUNT
 
     # desconto máximo permitido
-    if desconto > subtotal * 0.25:
-        desconto = subtotal * 0.25
+    if desconto > subtotal * MAX_DISCOUNT_RATE:
+        desconto = subtotal * MAX_DISCOUNT_RATE
 
     return desconto
 
@@ -135,16 +166,16 @@ def weight_calculation(items):
 # Calcula o frete com base no subtotal, peso, estado e se é expresso
 def shipping_calculation(subtotal, peso, state, express):
     frete = 0
-    if subtotal >= 500 and express == False:
+    if subtotal >= FREE_SHIPPING_THRESHOLD and express == False:
         frete = 0
     else:
-        if state == "MG" or state == "SP" or state == "RJ" or state == "ES":
-            frete = 20 + peso * 0.4
+        if state in SOUTHEAST_STATES:
+            frete = SOUTHEAST_BASE_SHIPPING + peso * SOUTHEAST_SHIPPING_PER_KG
         else:
-            frete = 35 + peso * 0.6
+            frete = OTHER_REGIONS_BASE_SHIPPING + peso * OTHER_REGIONS_SHIPPING_PER_KG
 
         if express == True:
-            frete = frete * 1.8
+            frete = frete * EXPRESS_SHIPPING_MULTIPLIER
 
     return frete
 
@@ -152,10 +183,10 @@ def shipping_calculation(subtotal, peso, state, express):
 def points_calculation(customer, valor_com_desconto, frete, imposto):
     pontos = 0
     
-    if customer["type"] == "vip":
-        pontos = int((valor_com_desconto + frete + imposto) / 5)
+    if customer["type"] == VIP:
+        pontos = int((valor_com_desconto + frete + imposto) / VIP_SPENT_PER_POINT)
     else:
-        pontos = int((valor_com_desconto + frete + imposto) / 10)
+        pontos = int((valor_com_desconto + frete + imposto) / DEFAULT_SPENT_PER_POINT)
         
     return pontos
 
