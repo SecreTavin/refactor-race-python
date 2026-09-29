@@ -120,39 +120,42 @@ def subtotal_calculation(items):
             
     return subtotal
 
-# Calcula o desconto com base no tipo de cliente, subtotal e cupom
+# Calcula o desconto total: tipo de cliente + cupom, limitado ao teto permitido
 def discount_calculation(customer, subtotal, coupon):
-    desconto = 0
+    customer_type = customer["type"]
 
-    # desconto por tipo de cliente
-    if customer["type"] == VIP:
+    desconto = customer_type_discount(customer_type, subtotal)
+    desconto += coupon_discount(coupon, customer_type, subtotal)
+
+    return min(desconto, subtotal * MAX_DISCOUNT_RATE)
+
+
+def customer_type_discount(customer_type, subtotal):
+    if customer_type == VIP:
         if subtotal >= VIP_HIGH_VALUE_THRESHOLD:
-            desconto = subtotal * VIP_HIGH_VALUE_DISCOUNT_RATE
-        else:
-            desconto = subtotal * VIP_DISCOUNT_RATE
-    else:
-        if customer["type"] == EMPLOYEE:
-            desconto = subtotal * EMPLOYEE_DISCOUNT_RATE
-        else:
-            if customer["type"] == REGULAR:
-                if subtotal >= REGULAR_DISCOUNT_THRESHOLD:
-                    desconto = subtotal * REGULAR_DISCOUNT_RATE
+            return subtotal * VIP_HIGH_VALUE_DISCOUNT_RATE
+        return subtotal * VIP_DISCOUNT_RATE
 
-    # cupons
+    if customer_type == EMPLOYEE:
+        return subtotal * EMPLOYEE_DISCOUNT_RATE
+
+    if customer_type == REGULAR and subtotal >= REGULAR_DISCOUNT_THRESHOLD:
+        return subtotal * REGULAR_DISCOUNT_RATE
+
+    return 0
+
+
+def coupon_discount(coupon, customer_type, subtotal):
     if coupon == COUPON_PROMO10:
-        desconto = desconto + subtotal * PROMO10_RATE
+        return subtotal * PROMO10_RATE
 
     if coupon == COUPON_PROMO20 and subtotal >= PROMO20_MIN_SUBTOTAL:
-        desconto = desconto + subtotal * PROMO20_RATE
+        return subtotal * PROMO20_RATE
 
-    if coupon == COUPON_VIP50 and customer["type"] == VIP:
-        desconto = desconto + VIP50_AMOUNT
+    if coupon == COUPON_VIP50 and customer_type == VIP:
+        return VIP50_AMOUNT
 
-    # desconto máximo permitido
-    if desconto > subtotal * MAX_DISCOUNT_RATE:
-        desconto = subtotal * MAX_DISCOUNT_RATE
-
-    return desconto
+    return 0
 
 # Calcula o peso total dos items do pedido
 def weight_calculation(items):
@@ -165,17 +168,16 @@ def weight_calculation(items):
 
 # Calcula o frete com base no subtotal, peso, estado e se é expresso
 def shipping_calculation(subtotal, peso, state, express):
-    frete = 0
-    if subtotal >= FREE_SHIPPING_THRESHOLD and express == False:
-        frete = 0
-    else:
-        if state in SOUTHEAST_STATES:
-            frete = SOUTHEAST_BASE_SHIPPING + peso * SOUTHEAST_SHIPPING_PER_KG
-        else:
-            frete = OTHER_REGIONS_BASE_SHIPPING + peso * OTHER_REGIONS_SHIPPING_PER_KG
+    if subtotal >= FREE_SHIPPING_THRESHOLD and not express:
+        return 0
 
-        if express == True:
-            frete = frete * EXPRESS_SHIPPING_MULTIPLIER
+    if state in SOUTHEAST_STATES:
+        frete = SOUTHEAST_BASE_SHIPPING + peso * SOUTHEAST_SHIPPING_PER_KG
+    else:
+        frete = OTHER_REGIONS_BASE_SHIPPING + peso * OTHER_REGIONS_SHIPPING_PER_KG
+
+    if express:
+        frete *= EXPRESS_SHIPPING_MULTIPLIER
 
     return frete
 
