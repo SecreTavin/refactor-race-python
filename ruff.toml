@@ -1,0 +1,3 @@
+# A cópia congelada do código original é mantida exatamente como era,
+# servindo de referência para o teste de golden master.
+extend-exclude = ["tests/golden_master"]
