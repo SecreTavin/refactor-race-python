@@ -153,3 +153,33 @@ def test_empty_cart():
     assert result["shipping"] == 0
     assert result["tax"] == 0
     assert result["total"] == 0
+
+
+def test_product_repeated_three_times_is_listed_once():
+    customer = {"name": "João", "type": "regular"}
+
+    items = [
+        {"name": "Mouse", "price": 100, "qty": 1, "weight": 0.2},
+        {"name": "Mouse", "price": 100, "qty": 1, "weight": 0.2},
+        {"name": "Mouse", "price": 100, "qty": 1, "weight": 0.2},
+    ]
+
+    result = process_order(customer, items)
+
+    assert result["duplicate_products"] == ["Mouse"]
+
+
+def test_duplicate_products_keep_order_of_first_appearance():
+    customer = {"name": "João", "type": "regular"}
+
+    items = [
+        {"name": "Teclado", "price": 200, "qty": 1, "weight": 1},
+        {"name": "Mouse", "price": 100, "qty": 1, "weight": 0.2},
+        {"name": "Mouse", "price": 100, "qty": 1, "weight": 0.2},
+        {"name": "Teclado", "price": 200, "qty": 1, "weight": 1},
+        {"name": "Monitor", "price": 900, "qty": 1, "weight": 3},
+    ]
+
+    result = process_order(customer, items)
+
+    assert result["duplicate_products"] == ["Teclado", "Mouse"]

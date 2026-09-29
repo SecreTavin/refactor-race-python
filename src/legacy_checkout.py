@@ -1,5 +1,7 @@
 # legacy_checkout.py
 
+from collections import Counter
+
 ORDERS_PROCESSED = []
 
 
@@ -158,11 +160,6 @@ def points_calculation(customer, valor_com_desconto, frete, imposto):
     return pontos
 
 def find_duplicate_products(items):
-    duplicados = []
-    
-    for i in range(len(items)):
-        for j in range(i + 1, len(items)):
-            if items[i]["name"] == items[j]["name"]:
-                duplicados.append(items[i]["name"])
+    name_counts = Counter(item["name"] for item in items)
 
-    return duplicados
+    return [name for name, count in name_counts.items() if count > 1]
