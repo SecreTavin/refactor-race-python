@@ -1,6 +1,8 @@
-# legacy_checkout.py
+"""Processamento de pedidos: subtotal, descontos, frete, impostos, pontos de
+fidelidade e detecção de produtos repetidos."""
 
 from collections import Counter
+from dataclasses import dataclass
 
 ORDERS_PROCESSED = []
 
@@ -50,87 +52,88 @@ VIP_SPENT_PER_POINT = 5
 DEFAULT_SPENT_PER_POINT = 10
 
 
+
+@dataclass(frozen=True)
+class OrderTotals:
+    """Valores do pedido antes do arredondamento."""
+
+    subtotal: float
+    discount: float
+    shipping: float
+    tax: float
+
+    @property
+    def total(self):
+        return self.subtotal - self.discount + self.shipping + self.tax
+
+
 def process_order(customer, items, coupon="", state="MG", express=False):
+    """Calcula o pedido, registra no histórico e imprime o resumo."""
+    totals = calculate_order_totals(customer["type"], items, coupon, state, express)
+    result = build_order_result(customer, items, totals)
 
-    #calculo do subtotal
-    subtotal = 0
-    subtotal = subtotal_calculation(items)
+    ORDERS_PROCESSED.append(result)
+    print_order_summary(customer["name"], totals, result["total"])
 
-    # Calcula o desconto com base no tipo de cliente, subtotal e cupom
-    desconto = 0
-    desconto = discount_calculation(customer, subtotal, coupon)
-    valor_com_desconto = subtotal - desconto
+    return result
 
-    # Calcula o peso total dos items do pedido
-    peso = 0
-    peso = weight_calculation(items)
 
-    # Calcula o frete com base no subtotal, peso, estado e se é expresso
-    frete = 0
-    frete = shipping_calculation(subtotal, peso, state, express)
+def calculate_order_totals(customer_type, items, coupon, state, express):
+    subtotal = calculate_subtotal(items)
+    discount = calculate_discount(customer_type, subtotal, coupon)
+    weight = calculate_total_weight(items)
 
-    # Calcula o imposto com base no estado e no valor com desconto
-    imposto = 0
-    imposto = tax_calculation(state, valor_com_desconto)
+    return OrderTotals(
+        subtotal=subtotal,
+        discount=discount,
+        shipping=calculate_shipping(subtotal, weight, state, express),
+        tax=calculate_tax(subtotal - discount, state),
+    )
 
-    # Calcula os pontos do cliente com base no valor com desconto, frete e imposto
-    pontos = points_calculation(customer, valor_com_desconto, frete, imposto)
-    
-    # Procura produtos repetidos de forma bem pouco elegante
-    duplicados = find_duplicate_products(items)
-    
-    # Calcula o total final do pedido
-    total_final = round(valor_com_desconto + frete + imposto, 2)
 
-    resultado = {
+def build_order_result(customer, items, totals):
+    return {
         "customer": customer["name"],
-        "subtotal": round(subtotal, 2),
-        "discount": round(desconto, 2),
-        "shipping": round(frete, 2),
-        "tax": round(imposto, 2),
-        "total": total_final,
-        "points": pontos,
-        "duplicate_products": duplicados
+        "subtotal": round(totals.subtotal, 2),
+        "discount": round(totals.discount, 2),
+        "shipping": round(totals.shipping, 2),
+        "tax": round(totals.tax, 2),
+        "total": round(totals.total, 2),
+        "points": calculate_points(customer["type"], totals.total),
+        "duplicate_products": find_duplicate_products(items),
     }
 
-    ORDERS_PROCESSED.append(resultado)
 
-    print("Pedido processado para " + customer["name"])
-    print("Subtotal:", subtotal)
-    print("Desconto:", desconto)
-    print("Frete:", frete)
-    print("Imposto:", imposto)
-    print("TOTAL:", total_final)
+def print_order_summary(customer_name, totals, rounded_total):
+    print(f"Pedido processado para {customer_name}")
+    print("Subtotal:", totals.subtotal)
+    print("Desconto:", totals.discount)
+    print("Frete:", totals.shipping)
+    print("Imposto:", totals.tax)
+    print("TOTAL:", rounded_total)
 
-    return resultado
 
-# Calcula o imposto com base no estado e no valor com desconto
-def tax_calculation(state, valor_com_desconto):
-    taxa = TAX_RATES.get(state, DEFAULT_TAX_RATE)
-
-    return valor_com_desconto * taxa
-
-# Calcula o subtotal dos items do pedido
-def subtotal_calculation(items):
+# As somas usam laço explícito de propósito: desde o Python 3.12, sum() faz soma
+# compensada de floats e pode diferir do original na última casa decimal.
+def calculate_subtotal(items):
+    """Soma preço x quantidade; itens com quantidade <= 0 são ignorados."""
     subtotal = 0
-    
-    for x in items:
-        if x["qty"] > 0:
-            subtotal += x["price"] * x["qty"]
-            
+    for item in items:
+        if item["qty"] > 0:
+            subtotal += item["price"] * item["qty"]
+
     return subtotal
 
-# Calcula o desconto total: tipo de cliente + cupom, limitado ao teto permitido
-def discount_calculation(customer, subtotal, coupon):
-    customer_type = customer["type"]
 
-    desconto = customer_type_discount(customer_type, subtotal)
-    desconto += coupon_discount(coupon, customer_type, subtotal)
+def calculate_discount(customer_type, subtotal, coupon):
+    """Desconto do tipo de cliente + cupom, limitado a MAX_DISCOUNT_RATE."""
+    discount = calculate_customer_type_discount(customer_type, subtotal)
+    discount += calculate_coupon_discount(coupon, customer_type, subtotal)
 
-    return min(desconto, subtotal * MAX_DISCOUNT_RATE)
+    return min(discount, subtotal * MAX_DISCOUNT_RATE)
 
 
-def customer_type_discount(customer_type, subtotal):
+def calculate_customer_type_discount(customer_type, subtotal):
     if customer_type == VIP:
         if subtotal >= VIP_HIGH_VALUE_THRESHOLD:
             return subtotal * VIP_HIGH_VALUE_DISCOUNT_RATE
@@ -145,7 +148,7 @@ def customer_type_discount(customer_type, subtotal):
     return 0
 
 
-def coupon_discount(coupon, customer_type, subtotal):
+def calculate_coupon_discount(coupon, customer_type, subtotal):
     if coupon == COUPON_PROMO10:
         return subtotal * PROMO10_RATE
 
@@ -157,42 +160,49 @@ def coupon_discount(coupon, customer_type, subtotal):
 
     return 0
 
-# Calcula o peso total dos items do pedido
-def weight_calculation(items):
-    peso = 0
-    
-    for produto in items:
-        peso += produto.get("weight", 0) * produto["qty"]
-        
-    return peso
 
-# Calcula o frete com base no subtotal, peso, estado e se é expresso
-def shipping_calculation(subtotal, peso, state, express):
+def calculate_total_weight(items):
+    weight = 0
+    for item in items:
+        weight += item.get("weight", 0) * item["qty"]
+
+    return weight
+
+
+def calculate_shipping(subtotal, weight, state, express):
     if subtotal >= FREE_SHIPPING_THRESHOLD and not express:
         return 0
 
     if state in SOUTHEAST_STATES:
-        frete = SOUTHEAST_BASE_SHIPPING + peso * SOUTHEAST_SHIPPING_PER_KG
+        shipping = SOUTHEAST_BASE_SHIPPING + weight * SOUTHEAST_SHIPPING_PER_KG
     else:
-        frete = OTHER_REGIONS_BASE_SHIPPING + peso * OTHER_REGIONS_SHIPPING_PER_KG
+        shipping = OTHER_REGIONS_BASE_SHIPPING + weight * OTHER_REGIONS_SHIPPING_PER_KG
 
     if express:
-        frete *= EXPRESS_SHIPPING_MULTIPLIER
+        shipping *= EXPRESS_SHIPPING_MULTIPLIER
 
-    return frete
+    return shipping
 
 
-def points_calculation(customer, valor_com_desconto, frete, imposto):
-    pontos = 0
-    
-    if customer["type"] == VIP:
-        pontos = int((valor_com_desconto + frete + imposto) / VIP_SPENT_PER_POINT)
+def calculate_tax(discounted_value, state):
+    return discounted_value * TAX_RATES.get(state, DEFAULT_TAX_RATE)
+
+
+def calculate_points(customer_type, total):
+    if customer_type == VIP:
+        spent_per_point = VIP_SPENT_PER_POINT
     else:
-        pontos = int((valor_com_desconto + frete + imposto) / DEFAULT_SPENT_PER_POINT)
-        
-    return pontos
+        spent_per_point = DEFAULT_SPENT_PER_POINT
+
+    return int(total / spent_per_point)
+
 
 def find_duplicate_products(items):
+    """Nomes que aparecem mais de uma vez, na ordem da primeira aparição.
+
+    Usa Counter (uma passada, O(n)) no lugar da comparação de todos os pares
+    (O(n²)) do código original.
+    """
     name_counts = Counter(item["name"] for item in items)
 
     return [name for name, count in name_counts.items() if count > 1]
