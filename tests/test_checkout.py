@@ -2,7 +2,7 @@
 
 from legacy_checkout import process_order
 
-
+# Test case for multiple items in the cart
 def test_regular_customer():
     customer = {
         "name": "Ana",
@@ -30,7 +30,7 @@ def test_regular_customer():
     assert result["tax"] == 66.50
     assert result["total"] == 1016.50
     
-
+# Test case for multiple items in the order
 def test_multiple_items():
     customer = {
         "name": "Pedro",
@@ -70,7 +70,7 @@ def test_multiple_items():
     assert result["tax"] == 86.45
     assert result["total"] == 1321.45
 
-
+# Test case for a VIP customer
 def test_vip_customer():
     customer = {
         "name": "Carlos",
@@ -95,7 +95,7 @@ def test_vip_customer():
     assert result["subtotal"] == 1200
     assert result["discount"] == 180
 
-
+# Test case for applying a coupon
 def test_coupon():
     customer = {
         "name": "Maria",
@@ -120,7 +120,7 @@ def test_coupon():
 
     assert result["discount"] == 40
 
-
+# Test case for duplicate products
 def test_duplicate_products():
     customer = {
         "name": "João",
@@ -136,3 +136,20 @@ def test_duplicate_products():
     result = process_order(customer, items)
 
     assert result["duplicate_products"] == ["Mouse"]
+    
+# Test case for an empty cart
+def test_empty_cart():
+    customer = {
+        "name": "Lucas",
+        "type": "regular"
+    }
+
+    items = []
+
+    result = process_order(customer, items)
+
+    assert result["subtotal"] == 0
+    assert result["discount"] == 0
+    assert result["shipping"] == 0
+    assert result["tax"] == 0
+    assert result["total"] == 0
