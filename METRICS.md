@@ -24,20 +24,20 @@ ruff check src/legacy_checkout.py --statistics
 
 | Indicador                          | Antes                                | Depois                              | Resultado |
 |------------------------------------|--------------------------------------|-------------------------------------|-----------|
-| Testes passando                    | 4 / 4                                | 49 / 49                             | ✅ melhorou |
+| Testes passando                    | 4 / 4                                | 50 / 50                             | ✅ melhorou |
 | Cobertura de testes                | 83% (12 de 72 linhas sem cobertura)  | 100% (0 de 112 linhas sem cobertura)| ✅ melhorou |
 | Complexidade da função principal   | `process_order` — **E (34)**         | `process_order` — **A (1)**         | ✅ melhorou |
 | Maior complexidade no módulo       | E (34)                               | B (6)                               | ✅ melhorou |
 | Complexidade média                 | E (34,0) — 1 bloco                   | A (2,47) — 15 blocos                | ✅ melhorou |
 | Índice de manutenibilidade         | A (51,69)                            | A (48,91)                           | ⚠️ caiu 2,78 pontos (continua na faixa A) — ver análise |
 | Problemas identificados pelo Ruff  | 4 (3× SIM102, 1× PLR1730)            | 0                                   | ✅ melhorou |
-| Quantidade de testes               | 4                                    | 49 (4 originais + 45 novos)         | ✅ melhorou |
+| Quantidade de testes               | 4                                    | 50 (4 originais + 46 novos)         | ✅ melhorou |
 
-### Distribuição dos 49 testes
+### Distribuição dos 50 testes
 
 | Arquivo | Testes | Finalidade |
 |---|---|---|
-| `tests/test_checkout.py` | 40 | 4 originais + 36 de caracterização via `process_order` (o parametrizado de impostos conta como 6) |
+| `tests/test_checkout.py` | 41 | 4 originais + 37 de caracterização via `process_order` (o parametrizado de impostos conta como 6) |
 | `tests/test_checkout_units.py` | 8 | Testes unitários das funções extraídas |
 | `tests/test_golden_master.py` | 1 | Compara com o código original em 5000 pedidos aleatórios |
 
@@ -101,7 +101,7 @@ Found 4 errors.
 
 ```text
 $ pytest -v
-49 passed
+50 passed
 
 $ pytest --cov=legacy_checkout --cov-report=term-missing
 Name                     Stmts   Miss  Cover   Missing
