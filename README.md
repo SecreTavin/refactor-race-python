@@ -408,7 +408,8 @@ Histórico em ordem cronológica, do mais antigo para o mais recente. Os commits
 de refatoração, teste, correção e documentação estão separados e usam os
 prefixos sugeridos na atividade (`refactor:`, `test:`, `fix:`, `docs:`,
 `chore:`). Os sete primeiros commits (até `a88772b`) vêm do repositório base
-fornecido pelo professor. O commit deste README vem logo depois do último da lista.
+fornecido pelo professor. A lista vai até o commit anterior ao que a atualizou;
+o histórico completo pode ser consultado com `git log --oneline`.
 
 ```
 a193d8a Add order processing functionality in legacy_checkout.py
@@ -435,4 +436,7 @@ cbf54b8 test: adiciona testes unitários das funções extraídas
 1eeaba7 docs: registra métricas depois da refatoração
 bf9c405 test: corrige expectativa do teste de carrinho vazio
 b9b0573 docs: atualiza contagem de testes no relatório de métricas
+45bd40f docs: documenta diagnóstico, refatorações, testes, métricas e uso de IA
+79a8a31 docs: adiciona papéis da equipe e detalha uso de IA no README
+1f984b1 docs: remove integrante que não faz parte da equipe
 ```
