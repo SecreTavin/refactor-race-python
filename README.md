@@ -6,10 +6,16 @@ um sistema legado de processamento de pedidos, melhorando a qualidade interna
 
 ## EQUIPE
 
-- Octávio Augusto
-- Arthur Marzano
-- Rafael Alves
-- Luis Philippe
+| Integrante | Matrícula | E-mail | Papel |
+|---|---|---|---|
+| **Octávio Augusto Arruda dos Prazeres** | 326138211 | arrudaoctavio178@gmail.com | **Colaborador principal** — Desenvolvedor líder: conduziu a refatoração, a correção da regressão e a medição das métricas |
+| **Rafael Martins Alves** | 325210271 | 325210271@ulife.com.br | **Colaborador principal** — Desenvolvedor e responsável por testes: extraiu as primeiras funções e criou testes (múltiplos itens, carrinho vazio) |
+| Arthur Araujo Marzano | 32524206 | arthuramarzano10@gmail.com | Analista de qualidade: levantamento de code smells e acompanhamento das métricas |
+| Luís Phillipe Pedra Souza | 325142539 | Luiphillip2020@gmail.com | Revisor técnico: revisão de legibilidade, organização e documentação |
+| Mario Lana Veloso Junior | 325216033 | 325216033@ulife.com.br | Apoio aos testes e à documentação: revisão dos cenários de teste e do README |
+
+Os papéis seguem a sugestão da atividade (analista de qualidade, desenvolvedor,
+responsável por testes e revisor técnico) e foram alternados quando necessário.
 
 ## DESCRIÇÃO
 
@@ -325,29 +331,39 @@ a mexer na forma de medir. A análise completa está em `METRICS.md`.
 ## USO DE INTELIGÊNCIA ARTIFICIAL
 
 - **Ferramenta utilizada:** Claude Code (modelo Claude Opus 5.5, da Anthropic).
-- **Finalidade:** conferir o repositório contra o enunciado, identificar
-  pendências, apoiar a refatoração, sugerir cenários de teste e revisar a
-  documentação.
+- **Finalidade:** a IA foi usada como apoio em duas frentes:
+  1. **Criação de mais casos de teste:** sugerir cenários que a suíte original
+     não cobria (limites de 500, 800 e 1000; cupons PROMO20 e VIP50; teto de
+     25%; frete expresso e fora do Sudeste; impostos por estado; pontos) e o
+     teste de golden master.
+  2. **Conferência do código entregue:** revisar o código e o repositório
+     contra o enunciado, apontar regressões, pendências de entrega e
+     inconsistências na documentação.
 - **Exemplos de sugestões recebidas:**
-  - *Aceita:* trocar a busca O(n²) de duplicados por `collections.Counter`.
-    Validamos com um teste que falhava antes da correção e pelo golden master.
-  - *Modificada:* a primeira versão da separação entre cálculo e impressão
-    guardava os valores brutos num campo auxiliar dentro do dicionário de
+  - *Aceita (testes):* criar um teste com o mesmo produto repetido 3 vezes. O
+    teste revelou que a extração de `find_duplicate_products` tinha mudado o
+    comportamento (`["Mouse", "Mouse", "Mouse"]` em vez de `["Mouse"]`), e a
+    correção foi feita com `collections.Counter`.
+  - *Aceita (testes):* criar o golden master, que compara 5000 pedidos
+    aleatórios com uma cópia congelada do código original.
+  - *Aceita (conferência):* ajustar a expectativa de `test_empty_cart` (frete
+    R$ 20 em vez de 0) depois de confirmar no código original qual era o
+    comportamento real.
+  - *Modificada (conferência):* a primeira proposta de separação entre cálculo
+    e impressão guardava os valores brutos num campo auxiliar do dicionário de
     retorno. Trocamos por uma dataclass `OrderTotals`, que deixa o contrato
     explícito.
-  - *Rejeitada:* usar `sum()` para calcular o subtotal e o peso. A verificação
-    diferencial contra o original mostrou diferença na última casa decimal do
-    valor impresso (efeito da soma compensada do Python 3.12), então mantivemos
-    o laço explícito.
-  - *Aceita:* ajustar a expectativa de `test_empty_cart` (frete R$ 20 em vez de 0)
-    depois de confirmar no código original qual era o comportamento real.
+  - *Rejeitada (conferência):* usar `sum()` para calcular o subtotal e o peso.
+    O golden master mostrou diferença na última casa decimal do valor impresso
+    (efeito da soma compensada do Python 3.12), então mantivemos o laço
+    explícito.
 - **A sugestão foi aceita, modificada ou rejeitada?** As três situações
   aconteceram, como descrito acima.
 - **Como a equipe validou a solução?** (1) A suíte roda após cada commit;
   (2) os valores esperados dos testes novos foram conferidos no código original;
   (3) o golden master compara 5000 pedidos com o original; (4) as métricas foram
   medidas de novo com as ferramentas pedidas; (5) a equipe revisou o código e
-  deve conseguir explicar cada alteração.
+  consegue explicar cada alteração.
 
 ## MELHORIAS FUTURAS (débito técnico que permanece)
 
