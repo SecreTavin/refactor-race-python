@@ -12,7 +12,6 @@ um sistema legado de processamento de pedidos, melhorando a qualidade interna
 | **Rafael Martins Alves** | 325210271 | 325210271@ulife.com.br | **Colaborador principal** — Desenvolvedor e responsável por testes: extraiu as primeiras funções e criou testes (múltiplos itens, carrinho vazio) |
 | Arthur Araujo Marzano | 32524206 | arthuramarzano10@gmail.com | Analista de qualidade: levantamento de code smells e acompanhamento das métricas |
 | Luís Phillipe Pedra Souza | 325142539 | Luiphillip2020@gmail.com | Revisor técnico: revisão de legibilidade, organização e documentação |
-| Mario Lana Veloso Junior | 325216033 | 325216033@ulife.com.br | Apoio aos testes e à documentação: revisão dos cenários de teste e do README |
 
 Os papéis seguem a sugestão da atividade (analista de qualidade, desenvolvedor,
 responsável por testes e revisor técnico) e foram alternados quando necessário.
