@@ -1,11 +1,12 @@
-# test_legacy_checkout.py
+# test_checkout.py
 
 import pytest
 
 import legacy_checkout
 from legacy_checkout import process_order
 
-# Test case for multiple items in the cart
+
+# Test case for a regular customer
 def test_regular_customer():
     customer = {
         "name": "Ana",
@@ -151,11 +152,15 @@ def test_empty_cart():
 
     result = process_order(customer, items)
 
+    # Subtotal 0 fica abaixo do mínimo para frete grátis (500), então o
+    # frete base do Sudeste (20) é cobrado mesmo sem itens: é o comportamento
+    # do código original, e não deve ser alterado sem um requisito.
     assert result["subtotal"] == 0
     assert result["discount"] == 0
-    assert result["shipping"] == 0
+    assert result["shipping"] == 20
     assert result["tax"] == 0
-    assert result["total"] == 0
+    assert result["total"] == 20
+    assert result["duplicate_products"] == []
 
 
 def test_product_repeated_three_times_is_listed_once():
